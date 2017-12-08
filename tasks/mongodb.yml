@@ -7,11 +7,23 @@
       - "{{ ansible_distribution }}.yml"
       - "{{ ansible_os_family }}.yml"
 
+# - debug: msg="the value of foo.txt is {{lookup('file', '/etc/foo.txt') }}"
   - name: Ensure the MongoDB repository key has been imported
     apt_key:
       keyserver: "{{ rocket_chat_mongodb_keyserver }}"
       id: "{{ rocket_chat_mongodb_gpg_key }}"
-    when: ansible_os_family == "Debian"
+    when:
+      - ansible_os_family == "Debian"
+      - rocket_mongo_key is not defined
+    tags: repo
+
+  - name: Add MongoDB repository key from file
+    apt_key:
+      data: "{{lookup('file', rocket_mongo_key }}"
+      state: present
+    when:
+      - ansible_os_family == "Debian"
+      - rocket_mongo_key is defined
     tags: repo
 
   - name: Ensure the MongoDB repository is present
